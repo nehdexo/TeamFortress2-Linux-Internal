@@ -7,6 +7,30 @@ struct Vec2 {
 
 struct Vec3 {
   float x = 0.0, y = 0.0, z = 0.0;
+
+  Vec3 operator+(const Vec3 v) {
+    return Vec3{x + v.x, y + v.y, z + v.z};
+  }
+
+  Vec3 operator*(const Vec3 v) {
+    return Vec3{x * v.x, y * v.y, z * v.z};
+  }
+
+  Vec3 operator*(float v) {
+    return Vec3{x * v, y * v, z * v};
+  }
+
+  Vec3 operator*(int v) {
+    return Vec3{x * v, y * v, z * v};
+  }
+
+  Vec3& operator-=(const Vec3 v) {
+    x -= v.x; y -= v.y; z -= v.z; return *this;
+  }
+
+  Vec3 operator-(const Vec3 v) {
+    return Vec3{x - v.x, y - v.y, z - v.z};
+  }
 };
 
 struct __attribute__((aligned(16))) Vec3_aligned {

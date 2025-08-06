@@ -1,3 +1,6 @@
+#ifndef MEMORY_HPP
+#define MEMORY_HPP
+
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -40,3 +43,5 @@ static void* get_module_base_address(std::string module_name) {
 
   return (void*)result;  
 }
+
+#endif
