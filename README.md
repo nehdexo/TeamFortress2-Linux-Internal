@@ -50,6 +50,7 @@ Library loaded successfully at 0x12345678900. Use Ctrl+C to unload.
 ```
 
 # Features
+(Non-exhaustive list)
 * Aimbot
 * Player ESP
   - Box
@@ -67,5 +68,4 @@ Library loaded successfully at 0x12345678900. Use Ctrl+C to unload.
 
 # TODO
 * More robust build system
-* Organize project files
 * Name project (?)
