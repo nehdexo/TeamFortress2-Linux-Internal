@@ -1,7 +1,9 @@
 # What is this?
 This is a program that is compiled into a Shared Object, and is used to give Extra Sensory Perception, automatic aiming, and automate player movement, in the game "Team Fortress 2". In a nutshell, this is a hack/cheat.  
   
-Also, this project is primarily an unfaithful port of [this internal hack](https://github.com/faluthe/tf_c) to C++.  
+Development is intermittent, as there is currently only one person with push and merge rights at this time. Please read the [I want to contribute!](#-i-want-to-contribute!) section for more detail.
+  
+Also, this project started as an unfaithful port of [this internal hack](https://github.com/faluthe/tf_c) to C++.  
 
 # How does this work?
 It internally (as a program that is injected inside tf2's process) reads and writes memory. A notable feature of it's functionality is using exposed symbols of other Shared Objects used by the game to run the game's own code against itself. The hack accomplishes this via interfaces of the game's own classes.
@@ -66,6 +68,16 @@ Library loaded successfully at 0x12345678900. Use Ctrl+C to unload.
 ![ESP](https://r2.e-z.host/bb3dfc85-7f7f-4dcb-8b0b-3a4af0aa57e4/2x1yy0lyb4vrrtcgnv.png)
 ![pickups](https://r2.e-z.host/bb3dfc85-7f7f-4dcb-8b0b-3a4af0aa57e4/6jhjaiseb021kvef5b.png)
 
+# I want to contribute!
+Hello, I ([Dr_Coomer](https://github.com/Doctor-Coomer)) can be busy outside this project, and so development may not be at a daily or even weekly pace.  
+If you want to contribute, please keep these in mind:  
+- This project uses snake_case
+- This project use a [Unity Build](https://en.wikipedia.org/wiki/Unity_build) paradigm
+  
+If you contribute entirely new features and files, I will most likely sit down and rewrite your entire pull request to fit with those two things. That is not a reason to not contribute, but that is a reason why your changes may take a while to add. All contributions are valuable.  
+
 # TODO
 * More robust build system
 * Name project (?)
+* ESP using IMGUI (Eventually?)
+* Add Engine Prediction
