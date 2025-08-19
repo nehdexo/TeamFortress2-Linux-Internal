@@ -72,7 +72,7 @@ Library loaded successfully at 0x12345678900. Use Ctrl+C to unload.
 Hello, I ([Dr_Coomer](https://github.com/Doctor-Coomer)) can be busy outside this project, and so development may not be at a daily or even weekly pace.  
 If you want to contribute, please keep these in mind:  
 - This project uses snake_case
-- This project use a [Unity Build](https://en.wikipedia.org/wiki/Unity_build) paradigm
+- This project uses a [Unity Build](https://en.wikipedia.org/wiki/Unity_build) paradigm
   
 If you contribute entirely new features and files, I will most likely sit down and rewrite your entire pull request to fit with those two things. That is not a reason to not contribute, but that is a reason why your changes may take a while to add. All contributions are valuable.  
 
