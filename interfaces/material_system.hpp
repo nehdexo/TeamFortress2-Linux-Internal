@@ -2,6 +2,7 @@
 #define MATERIAL_SYSTEM_HPP
 
 #include "../classes/material.hpp"
+#include "../classes/keyvalues.hpp"
 
 class MaterialSystem {
 public:
@@ -14,7 +15,7 @@ public:
     return find_material_fn(this, material_name, texture_group_name, complain, complain_prefix);
   }
 
-  Material* create_material(const char* name, void* key_value) {
+  Material* create_material(const char* name, KeyValues* key_value) {
     void** vtable = *(void ***)this;
 
     Material* (*create_material_fn)(void*, const char*, void*) = (Material* (*)(void*, const char*, void*))vtable[72];

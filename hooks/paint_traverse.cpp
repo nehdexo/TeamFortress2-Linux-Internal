@@ -47,18 +47,23 @@ void paint_traverse_hook(void* me, void* panel, __int8_t force_repaint, __int8_t
   if (!engine->is_in_game()) {
     return;
   }
+
+  static int old_font_height = config.debug.font_height;
+  static int old_font_weight = config.debug.font_weight;
   
-  if (esp_player_font == 0) {
+  if (esp_player_font == 0 || old_font_height != config.debug.font_height || old_font_weight != config.debug.font_weight) {
     esp_player_font = surface->text_create_font();
-    surface->text_set_font_glyph_set(esp_player_font, "ProggySquare", 14, 400, 0, 0, 0x0);
+    surface->text_set_font_glyph_set(esp_player_font, "ProggySquare", config.debug.font_height, config.debug.font_weight, 0, 0, 0x0);
   }
-
   
-  if (esp_entity_font == 0) {
+  if (esp_entity_font == 0 || old_font_height != config.debug.font_height || old_font_weight != config.debug.font_weight) {
+    old_font_height = config.debug.font_height;
+    old_font_weight = config.debug.font_weight;
     esp_entity_font = surface->text_create_font();
-    surface->text_set_font_glyph_set(esp_entity_font, "ProggySquare", 14, 400, 0, 0, 0x0);
+    surface->text_set_font_glyph_set(esp_entity_font, "ProggySquare", config.debug.font_height, config.debug.font_weight, 0, 0, 0x0);
   }
-
+  
+  
   if (config.aimbot.draw_fov == true && config.aimbot.master == true) {
     Vec2 screen_size = engine->get_screen_size();
 
@@ -83,8 +88,7 @@ void paint_traverse_hook(void* me, void* panel, __int8_t force_repaint, __int8_t
     surface->draw_circle(screen_size.x / 2, screen_size.y /2, radius, 55);
   }
   
-  
-    
+      
   for (unsigned int i = 1; i <= entity_list->get_max_entities(); ++i) {
     if (config.esp.master == false) continue;
 

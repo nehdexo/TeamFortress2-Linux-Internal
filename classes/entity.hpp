@@ -3,6 +3,7 @@
 
 #include <string>
 #include <string.h>
+#include <cstdint>
 
 #include "../vec.hpp"
 
@@ -65,7 +66,6 @@ enum entity_flags {
 
 class Entity {
 public:  
-
   int get_owner_entity_handle(void) {
     return *(int*)(this + 0x754);
   }
@@ -92,6 +92,10 @@ public:
     return (void*)(this + 0x8);
   }
 
+  int get_team(void)  {
+    return *(int*)(this + 0xDC);
+  }
+  
   int get_index(void) {
     void* networkable = get_networkable();
     void** vtable = *(void***)networkable;
@@ -102,7 +106,10 @@ public:
   }
   
   const char* get_model_name(void) {
-    return (const char*)*(unsigned long*)(*(unsigned long*)(this + 0x88) + 0x8);
+    uintptr_t base_class = *(uintptr_t*)(this + 0x88);
+    if (base_class == NULL) return "";
+    
+    return (const char*)*(unsigned long*)(base_class + 0x8);
   }
 
   enum pickup_type get_pickup_type(void) {
@@ -112,9 +119,13 @@ public:
       return pickup_type::AMMOPACK;
     }
 
-    if (strstr(model_name, "models/items/medkit") || strstr(model_name, "models/props_medieval/medieval_meat.mdl")) {
-      return pickup_type::MEDKIT;
-    }
+    if (strstr(model_name, "models/items/medkit")                     ||
+	strstr(model_name, "models/props_medieval/medieval_meat.mdl") ||
+	strstr(model_name, "models/props_halloween/halloween_medkit")
+	)
+      {
+	return pickup_type::MEDKIT;
+      }
 
     return pickup_type::UNKNOWN;
   }
@@ -142,36 +153,28 @@ public:
     return *(int*)((unsigned long)(client_class) + 0x28);
   }
 
-  std::string get_class_id_to_string(void) {
-    // TBD: Check model name for more accurate class name
-    switch (get_class_id()) {
-    case AMMO_OR_HEALTH_PACK:
-      return "AMMO/HP";
-    case DISPENSER:
-      return "DISPENSER";
-    case SENTRY:
-      return "SENTRY";
-    case TELEPORTER:
-      return "TELEPORTER";
-    case ARROW:
-      return "ARROW";
-    case PLAYER:
-      return "PLAYER";
-    case ROCKET:
-      return "ROCKET";
-    case PILL_OR_STICKY:
-      return "NADE";
-    case FLARE:
-      return "FLARE";
-    case CROSSBOW_BOLT:
-      return "BOLT";
-    default:
-      return "NOT IMPLEMENTED";
-    }
-  }
-
   int get_tickbase(void) {
     return *(int*)(this + 0x1718);
+  }
+
+  void set_tickbase(int tickbase) {
+    *(int*)(this + 0x1718) = tickbase;
+  }
+
+  
+  float get_simulation_time(void) {
+    return *(float*)(this + 0x98);
+  }
+  
+  bool is_building(void) {
+    switch (this->get_class_id()) {
+    case class_id::SENTRY:
+    case class_id::DISPENSER:
+    case class_id::TELEPORTER:
+      return true;
+    }
+
+    return false;
   }
 
 };

@@ -15,50 +15,16 @@
 #include "../../interfaces/engine.hpp"
 #include "../../interfaces/convar_system.hpp"
 
+#include "../../print.hpp"
 
-void box_esp_player(Vec3 screen, Vec3 screen_offset, Player* player) {
+void box_esp_player(Vec3 screen, Vec3 screen_offset, Player* player, Player* localplayer) {
   if (config.esp.player.box == true) {
+    RGBA color = config.esp.player.enemy_color.to_RGBA();
+    if (player->get_team() == localplayer->get_team()) color = config.esp.player.team_color.to_RGBA();
+    if (config.esp.player.friends == true && player->is_friend() == true) color = config.esp.player.friend_color.to_RGBA();
     
-    float box_offset = (screen.y - screen_offset.y)/4;
-
-    /* shadow box */
-    surface->set_rgba(0, 0, 0, 255);
-
-    //right side
-    surface->draw_line(screen.x + box_offset + 1, screen.y + 1, screen.x + box_offset + 1, screen_offset.y - 1);
-    surface->draw_line(screen.x + box_offset - 1, screen.y + 1, screen.x + box_offset - 1, screen_offset.y - 1);
-    
-    //left side
-    surface->draw_line(screen.x - box_offset + 1, screen.y + 1, screen.x - box_offset + 1, screen_offset.y - 1);
-    surface->draw_line(screen.x - box_offset - 1, screen.y + 1, screen.x - box_offset - 1, screen_offset.y - 1);
-    
-    //top
-    surface->draw_line(screen.x - box_offset - 1, screen_offset.y + 1, screen.x + box_offset + 2, screen_offset.y + 1);
-    surface->draw_line(screen.x - box_offset - 1, screen_offset.y - 1, screen.x + box_offset + 2, screen_offset.y - 1);
-    
-    //bottom
-    surface->draw_line(screen.x - box_offset - 1, screen.y + 1, screen.x + box_offset + 1, screen.y + 1);    
-    surface->draw_line(screen.x - box_offset - 1, screen.y - 1, screen.x + box_offset + 1, screen.y - 1);    
-    /* shadow box */
-    
-    /* actual box */
-    surface->set_rgba(255, 255, 255, 255);
-    if (config.esp.player.friends == true && player->is_friend()) surface->set_rgba(0, 220, 80, 255);
-    
-    //right side
-    surface->draw_line(screen.x + box_offset, screen.y, screen.x + box_offset, screen_offset.y);
-
-    //left side
-    surface->draw_line(screen.x - box_offset, screen.y, screen.x - box_offset, screen_offset.y);
-
-    //top
-    surface->draw_line(screen.x - box_offset, screen_offset.y, screen.x + box_offset + 1, screen_offset.y);
-
-    //bottom
-    surface->draw_line(screen.x - box_offset, screen.y, screen.x + box_offset, screen.y);    
-    /* actual box */
+    draw_outline_rectangle(screen, screen_offset, 0.25, color);
   }
-
 }
 
 void health_bar_esp_player(Vec3 screen, Vec3 screen_offset, Player* player) {
@@ -86,7 +52,6 @@ void health_bar_esp_player(Vec3 screen, Vec3 screen_offset, Player* player) {
       surface->set_rgba(255, 100, 0, 255);
     else if (player->get_health() <= (player->get_max_health()*.35))
       surface->set_rgba(255, 0, 0, 255);
-
   
     surface->draw_line(screen.x - health_offset - 4, screen.y, screen.x - health_offset - 4, screen_offset.y - ydelta - 1);
   }
@@ -105,7 +70,7 @@ void name_esp_player(Vec3 screen, Vec3 screen_offset, Player* player, unsigned i
     unsigned int name_length = surface->get_string_width(esp_player_font, name);
     
     surface->draw_set_text_color(255, 255, 255, 255);
-    surface->draw_set_text_pos(screen.x - (name_length/2.f) , screen_offset.y - 13);  
+    surface->draw_set_text_pos(screen.x - (name_length/2.f), screen_offset.y - surface->get_font_height(esp_player_font));  
 
     surface->draw_print_text(name, wcslen(name));
   }
@@ -163,15 +128,16 @@ void esp_player(unsigned int i, Player* player) {
     }
   }
 
-  
-  Player* localplayer = entity_list->player_from_index(engine->get_localplayer_index());  
-  if (player == localplayer ||
-      player->is_dormant() ||
-      player->get_lifestate() != 1 ||
-      (player->is_friend() && player->get_team() == localplayer->get_team() && config.esp.player.friends == false) ||
-      (player->get_team() == localplayer->get_team() && !player->is_friend() && friendlyfire == false)) {
-    return;
-  }
+  Player* localplayer = entity_list->get_localplayer();  
+  if (player == localplayer                                                                                      || // Ignore Local Player
+      player->is_dormant()                                                                                       || // Ignore Dormat (TODO: Add fading effect to dormat players)
+      player->get_lifestate() != 1                                                                               || // Ignore Dead
+      (player->get_team() == localplayer->get_team() && config.esp.player.team == false && !player->is_friend()) || // Ignore Team
+      (player->is_friend() && config.esp.player.friends == false && (config.esp.player.team == false && player->get_team() == localplayer->get_team())) // Ignore Friends
+      ) 
+    {
+      return;
+    }
 
   /*
   //bone draw ID debug
@@ -179,7 +145,7 @@ void esp_player(unsigned int i, Player* player) {
   for (unsigned int h = 0; h < 128; ++h) {
     Vec3 bone = player->get_bone_pos(h);
     Vec3 bone_screen;
-    render_view->world_to_screen(&bone, &bone_screen);
+    if(!render_view->world_to_screen(&bone, &bone_screen)) continue;
     surface->draw_set_text_pos(bone_screen.x, bone_screen.y);
     std::wstring a = std::to_wstring(h);
     surface->draw_print_text(a.c_str(), wcslen(a.c_str()));
@@ -190,14 +156,13 @@ void esp_player(unsigned int i, Player* player) {
   Vec3 screen;
   if (!render_view->world_to_screen(&location, &screen)) return;
 
-  float distance = distance_3d(localplayer->get_origin(), player->get_origin());
-    
+  float distance = distance_3d(localplayer->get_origin(), player->get_origin());    
 
-  Vec3 z_offset = {location.x, location.y, player->get_bone_pos(player->get_head_bone()).z + 10};
+  Vec3 location_offset = {location.x, location.y, player->get_bone_pos(player->get_head_bone()).z + 10};
   Vec3 screen_offset;
-  render_view->world_to_screen(&z_offset, &screen_offset);
+  render_view->world_to_screen(&location_offset, &screen_offset);
 
-  box_esp_player(screen, screen_offset, player);
+  box_esp_player(screen, screen_offset, player, localplayer);
   health_bar_esp_player(screen, screen_offset, player);
   flags_esp_player(screen, screen_offset, player, i);
   name_esp_player(screen, screen_offset, player, i);

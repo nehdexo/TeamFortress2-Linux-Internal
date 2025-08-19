@@ -21,6 +21,11 @@ void thirdperson(view_setup* setup) {
   Player* localplayer = entity_list->get_localplayer();
   if (localplayer == nullptr) return;
 
+  if (config.visuals.thirdperson.enabled == false) {
+    localplayer->set_thirdperson(false);
+    return;
+  }
+
   static bool was_pressed = false;
   static bool do_thirdperson = false;
   if (config.visuals.thirdperson.enabled == true) {
@@ -39,9 +44,9 @@ void thirdperson(view_setup* setup) {
     Vec3 forward, right, up; angle_vectors(setup->angles, &forward, &right, &up);
 
     Vec3 offset;
-    //offset += right * config.visuals.thirdperson.right;
-    //offset += up * config.visuals.thirdperson.up;
-    offset -= forward * config.visuals.thirdperson.distance;
+    offset += right * config.visuals.thirdperson.x;
+    offset += up * config.visuals.thirdperson.y;
+    offset -= forward * config.visuals.thirdperson.z;
 
     Vec3 origin = localplayer->get_shoot_pos(); //pView->origin
     Vec3 start = origin;

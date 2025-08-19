@@ -15,34 +15,15 @@ enum types_t {
   TYPE_NUMTYPES,
 };
 
+class KeyValues;
+static KeyValues* (*key_values_constructor_original)(void*, const char*);
+
 class KeyValues {
-
-  KeyValues* FindKey(const char *keyName, bool bCreate);
-  
-  void SetString(const char* keyName, const char* value) {
-    KeyValues* dat = FindKey(keyName, true);
-
-    if (dat) {
-      if (dat->m_iDataType == TYPE_STRING && dat->m_sValue == value) {
-	return;
-      }
-
-      delete[] dat->m_sValue;
-      delete[] dat->m_wsValue;
-      dat->m_wsValue = NULL;
-
-      if (!value) {
-	value = "";
-      }
-
-      int len = int(strlen(value));
-      dat->m_sValue = new char[len + 1];
-      memcpy(dat->m_sValue, value, len + 1);
-
-      dat->m_iDataType = TYPE_STRING;
-    }
+  KeyValues(const char* name) {
+    key_values_constructor_original(this, name);
   }
-
+  
+  
 private:
   int m_iKeyName;
   char* m_sValue;

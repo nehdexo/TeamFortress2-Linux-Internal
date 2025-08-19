@@ -2,7 +2,8 @@
 #define WEAPON_HPP
 
 #include "entity.hpp"
-#include "sniper_dot.hpp"
+
+#include "../interfaces/global_vars.hpp"
 
 #define TICK_INTERVAL 0.015
 
@@ -785,7 +786,7 @@ public:
   
   bool is_headshot_weapon(void) {
     int weapon_type_id = this->get_type_id();
-    if (weapon_type_id == TF_WEAPON_SNIPERRIFLE ||
+    if (weapon_type_id == TF_WEAPON_SNIPERRIFLE         ||
 	weapon_type_id == TF_WEAPON_SNIPERRIFLE_CLASSIC ||
 	weapon_type_id == TF_WEAPON_SNIPERRIFLE_DECAP)
       {
@@ -793,14 +794,30 @@ public:
       }
 
     int weapon_def_id = this->get_def_id();
-    if (weapon_def_id == Spy_m_TheAmbassador ||
-	weapon_def_id == Spy_m_FestiveAmbassador)
+    if (weapon_def_id == Spy_m_TheAmbassador          ||
+	weapon_def_id == Spy_m_FestiveAmbassador      ||
+	weapon_def_id == Sniper_m_SniperRifle         ||
+	weapon_def_id == Sniper_m_SniperRifleR        ||
+	weapon_def_id == Sniper_m_TheBazaarBargain    ||
+	weapon_def_id == Sniper_m_TheHitmansHeatmaker ||
+	weapon_def_id == Sniper_m_TheClassic          ||
+	weapon_def_id == Sniper_m_FestiveSniperRifle  ||
+	weapon_def_id == Sniper_m_BloodBotkillerSniperRifleMkI ||
+	weapon_def_id == Sniper_m_CarbonadoBotkillerSniperRifleMkI ||
+	weapon_def_id == Sniper_m_DiamondBotkillerSniperRifleMkI ||
+	weapon_def_id == Sniper_m_GoldBotkillerSniperRifleMkI ||
+	weapon_def_id == Sniper_m_RustBotkillerSniperRifleMkI ||
+	weapon_def_id == Sniper_m_SilverBotkillerSniperRifleMkI ||
+	weapon_def_id == Sniper_m_GoldBotkillerSniperRifleMkII ||
+	weapon_def_id == Sniper_m_SilverBotkillerSniperRifleMkII ||
+	weapon_def_id == Sniper_m_ShootingStar ||
+	weapon_def_id == Sniper_m_TheAWPerHand ||
+	weapon_def_id == Sniper_m_TheMachina)
       {
 	return true;
       }
 
     return false;
-	
   }
 
   bool can_ambassador_headshot() {
@@ -810,27 +827,15 @@ public:
 
     return (owner->get_tickbase() * TICK_INTERVAL) - this->get_last_attack() > 1.f;
   }
-
-  bool can_sniper_rifle_headshot(SniperDot* sniper_dot) {
-    Entity* owner = this->get_owner_entity();
-    if (owner == nullptr)
-      return false;
-
-    return (owner->get_tickbase() * TICK_INTERVAL) - sniper_dot->get_charge_start_time() > 1.f;
-  }
   
   float get_charged_damage(void) {
     return *(float*)(this + 0x109C);
-  }
+  }  
   
   float get_last_attack(void) {
     return *(float*)(this + 0x1064);
   }
-
-  float get_next_attack(void) {
-    return *(float*)(this + 0xE94);
-  }
-
+  
   float get_next_primary_attack(void) {
     return *(float*)(this + 0xE94);
   }
@@ -843,10 +848,10 @@ public:
     Entity* owner = this->get_owner_entity();
     if (owner == nullptr)
       return false;
-    
-    float next_attack = this->get_next_attack();
+
+    float next_attack = *(float*)(owner + 0x1088);
     float next_primary_attack = this->get_next_primary_attack();
-    float time = owner->get_tickbase() * TICK_INTERVAL;    
+    float time = owner->get_tickbase() * global_vars->interval_per_tick;    
     
     return (next_primary_attack <= time && next_attack <= time); 
   }
@@ -856,9 +861,9 @@ public:
     if (owner == nullptr)
       return false;
     
-    float next_attack = this->get_next_attack();
+    float next_attack = *(float*)(owner + 0x1088);
     float next_secondary_attack = this->get_next_secondary_attack();
-    float time = owner->get_tickbase() * TICK_INTERVAL;    
+    float time = owner->get_tickbase() * global_vars->interval_per_tick;    
     
     return (next_secondary_attack <= time && next_attack <= time); 
   }

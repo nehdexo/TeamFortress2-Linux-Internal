@@ -57,7 +57,7 @@ void swap_window_hook(SDL_Window* window) {
     ImGui_ImplSDL2_InitForOpenGL(window, nullptr);    
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigWindowsMoveFromTitleBarOnly = true;
-    
+
     orig_style = ImGui::GetStyle();
   }
 

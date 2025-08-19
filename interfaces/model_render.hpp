@@ -13,6 +13,8 @@ public:
 
     forced_material_override_fn(this, new_material, override_type);
   }
+
+  
 };
 
 inline static ModelRender* model_render;

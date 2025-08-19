@@ -10,6 +10,8 @@
 
 #include "../vec.hpp"
 
+struct user_cmd;
+
 #define	FL_ONGROUND (1<<0)
 #define FL_DUCKING (1<<1)
 #define	FL_WATERJUMP (1<<2)
@@ -204,10 +206,6 @@ public:
     return (Weapon*)entity_list->entity_from_handle(get_weapon_handle());
   }
    
-  int get_health(void) {
-    return *(int*)(this + 0xD4);
-  }
-
   bool is_friend(void) {
     player_info pinfo;
     if (!engine->get_player_info(this->get_index(), &pinfo)) return false; 
@@ -215,11 +213,15 @@ public:
     
     return steam_friends->is_friend(pinfo.friends_id);
   }
-  
+
+  int get_health(void) {
+    return *(int*)(this + 0xD4);
+  }
+
   int get_max_health(void) {
     return *(int*)(this + 0x1DF8);
   }
-
+  
   int get_default_fov(void) {
     return *(int*)(this + 0x15E4);
   }
@@ -243,11 +245,7 @@ public:
   bool get_lifestate(void) {
     return *(bool*)(this + 0x746);
   }
-  
-  int get_team(void)  {
-    return *(int*)(this + 0xDC);
-  }
-  
+    
   Vec3 get_shoot_pos(void) {
     void** vtable = *(void ***)this;
 
@@ -263,14 +261,13 @@ public:
   Vec3 get_bone_pos(int bone_num) {
     // 128 bones, 3x4 matrix
     float bone_to_world_out[128][3][4];
-    if (this->setup_bones(bone_to_world_out, 128, 0x100, 0.0f)) {
+    if (this->setup_bones(bone_to_world_out, 128, 0x100, this->get_simulation_time())) {
       // Saw this in the source leak, don't know how it works
       return (Vec3){bone_to_world_out[bone_num][0][3], bone_to_world_out[bone_num][1][3], bone_to_world_out[bone_num][2][3]};
     }
 
     return (Vec3){0.0f, 0.0f, 0.0f};
   }
-
   
   int get_head_bone(void) {
     switch (this->get_tf_class()) {
@@ -333,7 +330,7 @@ public:
 
   bool is_invulnerable(void) {
     if (this->in_cond(TF_COND_INVULNERABLE)                     ||
-	this->in_cond(TF_COND_INVULNERABLE_USER_BUFF)           ||
+	//this->in_cond(TF_COND_INVULNERABLE_USER_BUFF)           ||
 	this->in_cond(TF_COND_INVULNERABLE_WEARINGOFF)          ||
 	this->in_cond(TF_COND_INVULNERABLE_CARD_EFFECT)         ||
 	this->in_cond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED) ||
@@ -356,30 +353,59 @@ public:
   int get_flags(void) {
     return *(int*)(this + 0x460);
   }
-    
-  bool can_shoot() {
+
+  float get_fov_time(void) {
+    return *(float*)(this + 0x15E0);
+  }
+
+  float get_next_attack(void) {
+    return *(float*)(this + 0x1088);
+  }
+  
+  bool can_shoot(Player* target_player) {
     Weapon* weapon = this->get_weapon();
     if (!weapon)
       return false;
-
+    
     if (attribute_manager->attrib_hook_value(0, "no_attack", this))
       return false;
 
+    if (!this->is_scoped() && weapon->get_def_id() == Sniper_m_TheMachina)
+      return false;
+    
     // Can we headshot? Is it advantageous to headshot?
     // If not, maybe it would be better to not shoot at all.
     if (weapon->is_headshot_weapon()) {
-      if (this->get_tf_class() == CLASS_SPY && weapon->can_ambassador_headshot()) {
-	return true;
-      } else {
-	return false;
+      if (this->get_tf_class() == CLASS_SPY) {
+	if (weapon->can_ambassador_headshot()) {
+	  return true;
+	} else {
+	  return false;
+	}
       }
 
-      //TODO: Add check for sniper, weapon->can_sniper_rifle_headshot()
-    }    
-
+      if (this->get_tf_class() == CLASS_SNIPER) {
+	if (this->is_scoped()) {
+	  float charge_time = (this->get_tickbase() * TICK_INTERVAL) - this->get_fov_time();
+	  if (target_player->get_health() <= 50 || charge_time >= 0.2f) {
+	    return true;
+	  } else {
+	    return false;
+	  }
+	}
+      }    
+    }
+    
     return true;
   }
+  
+  user_cmd* get_current_cmd(void) {
+    return (user_cmd*)*(void**)(this + (1628 - 8));
+  }
 
+  void set_current_cmd(user_cmd* user_cmd) {
+    *(void**)(this + (1628 - 8)) = user_cmd;
+  }
   
   Entity* to_entity(void) {
     return (Entity*)this;

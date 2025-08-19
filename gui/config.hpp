@@ -6,6 +6,8 @@
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_keyboard.h>
 
+#include "../vec.hpp"
+
 struct button {
   int button;
   bool waiting = false;
@@ -24,6 +26,8 @@ struct Aim {
   float fov = 45;
   bool draw_fov = false;
 
+  bool auto_scope = false;
+  
   bool ignore_friends = true;
 };
 
@@ -31,6 +35,10 @@ struct Esp {
   bool master = true;
 
   struct Player {
+    RGBA_float enemy_color = {.r = 1, .g = 0.501960784, .b = 0, .a = 1};
+    RGBA_float team_color = {.r = 1, .g = 1, .b = 1, .a = 1};
+    RGBA_float friend_color = {.r = 0, .g = 0.862745098, .b = 0.31372549, .a = 1};
+    
     bool box = true;
     bool health_bar = true;    
     bool name = true;
@@ -41,12 +49,21 @@ struct Esp {
     } flags;
     
     bool friends = true;
+    bool team = false;
   } player;
 
   struct Pickup {
     bool box = false;    
     bool name = true;
   } pickup;
+
+  struct Buildings {
+    bool box = true;
+    bool health_bar = true;    
+    bool name = true;
+
+    bool team = false;
+  } buildings;
 };
 
 struct Visuals {
@@ -59,7 +76,9 @@ struct Visuals {
   struct Thirdperson {
     struct button key = {.button = SDL_SCANCODE_LALT};
     bool enabled = false;
-    float distance = 150.0f;
+    float z = 150.0f;
+    float y = 20.0f;
+    float x = 0; 
   } thirdperson;
   
   bool override_fov = false;
@@ -72,11 +91,18 @@ struct Misc {
   bool no_push = false;
 };
 
+struct Debug {
+  int font_height = 14;
+  int font_weight = 400;
+  bool debug_render_all_entities = false;
+};
+
 struct Config {
   Aim aimbot;
   Esp esp;
   Visuals visuals;
   Misc misc;
+  Debug debug;
 };
 
 inline static Config config;
@@ -84,12 +110,10 @@ inline static Config config;
 
 static bool is_button_down(struct button button) {
   if (button.button >= 0) {
-  
     const uint8_t* keys = SDL_GetKeyboardState(NULL);
   
-    if (keys[button.button] == 1) {
+    if (keys[button.button] == 1)
       return true;
-    }
 
     return false;
   } else {
@@ -99,7 +123,6 @@ static bool is_button_down(struct button button) {
       return true;
 
     return false;
-
   }  
 
   return false;

@@ -3,6 +3,10 @@
 
 #include <wchar.h>
 
+#include "../vec.hpp"
+
+#include "../gui/config.hpp"
+
 class Surface {
 public:
   void set_rgba(int r, int g, int b, int a) {
@@ -13,6 +17,15 @@ public:
     set_rgba_fn(this, r, g, b, a);
   }
 
+  void set_rgba(RGBA color) {
+    void** vtable = *(void ***)this;
+
+    void (*set_rgba_fn)(void*, int, int, int, int) = (void (*)(void*, int, int, int, int))vtable[10];
+
+    set_rgba_fn(this, color.r, color.g, color.b, color.a);
+  }
+
+  
   void draw_line(int x1, int y1, int x2, int y2) {
     void** vtable = *(void ***)this;
 
@@ -56,7 +69,7 @@ public:
   }
 
   int get_font_height(unsigned long font) {
-    return 13; //CHANGE ME: use virtual function GetFontTall instead
+    return config.debug.font_height; //CHANGE ME: use virtual function GetFontTall instead
   }
   
   int get_character_width(unsigned long font, int character) {

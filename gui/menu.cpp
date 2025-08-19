@@ -9,15 +9,12 @@
 
 inline static bool menu_focused = false;
 
-static ImGuiStyle orig_style;
-
 void get_input(SDL_Event* event) {
   ImGui::KeybindEvent(event, &config.aimbot.key.waiting, &config.aimbot.key.button);
   ImGui::KeybindEvent(event, &config.visuals.thirdperson.key.waiting, &config.visuals.thirdperson.key.button);
 }
 
 void draw_aim_tab() {
-
   ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 27);
   
   ImGui::Checkbox("Master", &config.aimbot.master);
@@ -44,10 +41,12 @@ void draw_aim_tab() {
   
   ImGui::Text("FOV: ");
   ImGui::SameLine();
-  ImGui::SliderFloat(" ", &config.aimbot.fov, 0.1f, 180.0f, "%.0f\xC2\xB0");
+  ImGui::SliderFloatHeightPad(" ", &config.aimbot.fov, 0.1f, 180.0f, 1, "%.0f\xC2\xB0");
   
   ImGui::Checkbox("Draw FOV", &config.aimbot.draw_fov);
 
+  ImGui::Checkbox("Sniper auto scope", &config.aimbot.auto_scope);
+  
   ImGui::Checkbox("Ignore Friends", &config.aimbot.ignore_friends);
   
   ImGui::EndGroup();  
@@ -70,6 +69,9 @@ void draw_esp_tab() {
   //Player
   ImGui::BeginGroup();
   ImGui::Text("Player");
+  ImGui::ColorEdit4("Enemy Color##Player", config.esp.player.enemy_color.to_arr(), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoInputs);
+  ImGui::ColorEdit4("Team Color##Player", config.esp.player.team_color.to_arr(), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoInputs);
+  ImGui::ColorEdit4("Friend Color##Player", config.esp.player.friend_color.to_arr(), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoInputs);
   ImGui::Checkbox("Box##Player", &config.esp.player.box);
   ImGui::Checkbox("Health Bar##Player", &config.esp.player.health_bar);
   ImGui::Checkbox("Name##Player", &config.esp.player.name);
@@ -80,6 +82,7 @@ void draw_esp_tab() {
   ImGui::NewLine();
   ImGui::Text("Misc");
   ImGui::Checkbox("Friends##Player", &config.esp.player.friends);
+  ImGui::Checkbox("Team##Player", &config.esp.player.team);
   ImGui::EndGroup();
 
   ImGui::SameLine();
@@ -92,7 +95,22 @@ void draw_esp_tab() {
   ImGui::Checkbox("Box##Pickup", &config.esp.pickup.box);
   ImGui::Checkbox("Name##Pickup", &config.esp.pickup.name);
   ImGui::EndGroup();
-    
+
+  ImGui::SameLine();
+  ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+  ImGui::SameLine();
+  
+  //Buildings
+  ImGui::BeginGroup();
+  ImGui::Text("Buildings");
+  ImGui::Checkbox("Box##Buildings", &config.esp.buildings.box);
+  ImGui::Checkbox("Health Bar##Buildings", &config.esp.buildings.health_bar);
+  ImGui::Checkbox("Name##Buildings", &config.esp.buildings.name);
+  ImGui::NewLine();
+  ImGui::Text("Misc");
+  ImGui::Checkbox("Team##Buildings", &config.esp.buildings.team);
+  ImGui::EndGroup();
+  
   ImGui::EndGroup();
 }
 
@@ -132,8 +150,10 @@ void draw_visuals_tab() {
   ImGui::Text("Camera");
   ImGui::Text("Key: "); ImGui::SameLine();
   ImGui::KeybindBox(&config.visuals.thirdperson.key.waiting, &config.visuals.thirdperson.key.button); ImGui::SameLine();
-  ImGui::Checkbox("Thirdperson", &config.visuals.thirdperson.enabled);  
-  ImGui::SliderFloat(" ##Camera", &config.visuals.thirdperson.distance, 20.0f, 500.0f, "%.1f");
+  ImGui::Checkbox("Thirdperson", &config.visuals.thirdperson.enabled);
+  ImGui::SliderFloatHeightPad("Z##CameraZ", &config.visuals.thirdperson.z, 20.0f, 500.0f, 0, "%.1f");
+  ImGui::SliderFloatHeightPad("Y##CameraY",   &config.visuals.thirdperson.y,  -50.0f,  50.0f, 0, "%.1f");
+  ImGui::SliderFloatHeightPad("X##CameraX",   &config.visuals.thirdperson.x,  -50.0f,  50.0f, 0, "%.1f");
   
   
   ImGui::NewLine();
@@ -167,6 +187,25 @@ void draw_misc_tab() {
   ImGui::EndGroup();
 }
 
+void draw_debug_tab() {
+  ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 21);
+
+  ImGui::Text(" ");
+
+  ImGui::EndGroup();
+
+  ImGui::SameLine();
+  ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+  ImGui::SameLine();
+  
+  ImGui::BeginGroup();
+
+  ImGui::SliderInt("Font Height", &config.debug.font_height, 6, 60);  
+  ImGui::SliderInt("Font Weight", &config.debug.font_weight, 50, 800);  
+  ImGui::Checkbox("Draw All Entities", &config.debug.debug_render_all_entities);
+  
+  ImGui::EndGroup();
+}
 
 void draw_tab(ImGuiStyle* style, const char* name, int* tab, int index) {
   ImVec4 orig_box_color = ImVec4(0.15, 0.15, 0.15, 1);
@@ -201,13 +240,14 @@ void draw_menu() {
     style->Colors[ImGuiCol_ButtonActive]     = ImVec4(0.919346734, 0.500980392, 0.261764706, 0.6);
     style->Colors[ImGuiCol_SliderGrab]       = ImVec4(0.869346734, 0.450980392, 0.211764706, 1);
     style->Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.899346734, 0.480980392, 0.241764706, 1);
-    
+    style->GrabMinSize = 2;
     
     ImGui::BeginGroup();
     draw_tab(style, "Aimbot", &tab, 0);
     draw_tab(style, "ESP", &tab, 1);
     draw_tab(style, "Visuals", &tab, 2);
     draw_tab(style, "Misc", &tab, 3);
+    draw_tab(style, "Debug", &tab, 4);
 
     switch (tab) {
     case 0:
@@ -222,6 +262,9 @@ void draw_menu() {
     case 3:
       draw_misc_tab();
       break;
+    case 4:
+      draw_debug_tab();
+      break;      
     }
   }
   

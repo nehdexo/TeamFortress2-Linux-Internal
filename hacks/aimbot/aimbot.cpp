@@ -97,7 +97,7 @@ void aimbot(user_cmd* user_cmd) {
   
   for (unsigned int i = 1; i <= entity_list->get_max_entities(); ++i) {
     Player* player = entity_list->player_from_index(i);
-
+    
     if (player == nullptr                                                        ||
 	player == localplayer                                                    ||
 	player->is_dormant() == true                                             || 
@@ -105,20 +105,19 @@ void aimbot(user_cmd* user_cmd) {
 	player->get_lifestate() != 1                                             ||
 	player->is_invulnerable() == true                                        ||
 	(config.aimbot.ignore_friends == true && player->is_friend()))
-
       {
 	continue;
       }
     
-    int bone = 2;
+    int bone = player->get_tf_class() == CLASS_ENGINEER ? 5 : 2; // Aim at body by default
+
+    // Aim for head
     if (localplayer->get_tf_class() == CLASS_SNIPER) {
       if (localplayer->is_scoped() && player->get_health() > 50)
 	bone = player->get_head_bone();
     } else if (localplayer->get_tf_class() == CLASS_SPY) {
       if (weapon->is_headshot_weapon())
 	bone = player->get_head_bone();
-    } else {
-      bone = 2;
     }
     
     Vec3 diff = {player->get_bone_pos(bone).x - localplayer->get_shoot_pos().x,
@@ -158,8 +157,13 @@ void aimbot(user_cmd* user_cmd) {
       target_player = nullptr;
 
     
-    if (((is_button_down(config.aimbot.key) && config.aimbot.use_key) || !config.aimbot.use_key) && config.aimbot.auto_shoot == true && target_player == player && localplayer->can_shoot())
-      user_cmd->buttons |= 1;
+    if (((is_button_down(config.aimbot.key) && config.aimbot.use_key) || !config.aimbot.use_key) && config.aimbot.auto_shoot == true && target_player == player && localplayer->can_shoot(target_player)) {
+      if (config.aimbot.auto_scope == true && localplayer->get_tf_class() == CLASS_SNIPER && !localplayer->is_scoped() && weapon->can_primary_attack())
+	user_cmd->buttons |= IN_ATTACK2;
+      
+      user_cmd->buttons |= IN_ATTACK;
+    }
+    
     
     if (((is_button_down(config.aimbot.key) && config.aimbot.use_key) || !config.aimbot.use_key) && weapon->can_primary_attack() && target_player == player)
       user_cmd->view_angles = view_angles;

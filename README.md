@@ -65,7 +65,10 @@ Library loaded successfully at 0x12345678900. Use Ctrl+C to unload.
 * Bhop
 * sv_pure bypass
 
-![ESP](https://r2.e-z.host/bb3dfc85-7f7f-4dcb-8b0b-3a4af0aa57e4/2x1yy0lyb4vrrtcgnv.png)
+![ESP](https://r2.e-z.host/bb3dfc85-7f7f-4dcb-8b0b-3a4af0aa57e4/vncrpso6admntx6q4v.png)
+![MENU1](https://r2.e-z.host/bb3dfc85-7f7f-4dcb-8b0b-3a4af0aa57e4/q9wdsiijg2tdtrrh3t.png)
+![MENU2](https://r2.e-z.host/bb3dfc85-7f7f-4dcb-8b0b-3a4af0aa57e4/zgwnk99mk0b5wj181z.png)
+![MENU3](https://r2.e-z.host/bb3dfc85-7f7f-4dcb-8b0b-3a4af0aa57e4/2jy35bke13e9pqo8r4.png)
 ![pickups](https://r2.e-z.host/bb3dfc85-7f7f-4dcb-8b0b-3a4af0aa57e4/6jhjaiseb021kvef5b.png)
 
 # I want to contribute!

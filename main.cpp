@@ -1,5 +1,9 @@
 #include "print.hpp"
 
+#include "random_seed.hpp"
+
+#include "classes/keyvalues.hpp"
+
 #include <unistd.h>
 
 #include "interfaces/engine.hpp"
@@ -17,6 +21,10 @@
 #include "interfaces/steam_friends.hpp"
 #include "interfaces/input.hpp"
 #include "interfaces/attribute_manager.hpp"
+#include "interfaces/global_vars.hpp"
+#include "interfaces/move_helper.hpp"
+#include "interfaces/game_movement.hpp"
+#include "interfaces/client_state.hpp"
 
 #include "hooks/hooks.cpp"
 #include "libsigscan/libsigscan.h"
@@ -49,8 +57,7 @@ funchook_t* funchook;
 
 __attribute__((constructor))
 void entry() {
-  funchook = funchook_create();
-  
+  // Interfaces
   client = (Client*)get_interface("./tf/bin/linux64/client.so", "VClient017");
   engine = (Engine*)get_interface("./bin/linux64/engine.so", "VEngineClient014");
   
@@ -61,8 +68,20 @@ void entry() {
   unsigned int input_eaddr = *(unsigned int*)(func_address + 0x3);
   unsigned long next_instruction = (unsigned long)(func_address + 0x7);
   input = (Input*)(*(void**)(next_instruction + input_eaddr));
+  
+  unsigned long check_stuck_address = (unsigned long)sigscan_module("client.so", "48 8D 05 ? ? ? ? 48 89 85 ? ? ? ? 74 ? 48 8B 38");
+  unsigned int move_helper_eaddr = *(unsigned int*)(check_stuck_address + 0x3);
+  unsigned long check_stuck_next_instruction = (unsigned long)(check_stuck_address + 0x7);
+  move_helper = (MoveHelper*)(*(void**)(check_stuck_next_instruction + move_helper_eaddr));
 
+  unsigned long rcon_addr_change_address = (unsigned long)sigscan_module("engine.so", "48 8D 05 ? ? ? ? 4C 8B 40");
+  unsigned int client_state_eaddr = *(unsigned int*)(rcon_addr_change_address + 0x3);
+  unsigned long rcon_addr_change_next_instruction = (unsigned long)(rcon_addr_change_address + 0x7);
+  client_state = (ClientState*)((void*)(rcon_addr_change_next_instruction + client_state_eaddr));
+  
   prediction = (Prediction*)get_interface("./tf/bin/linux64/client.so", "VClientPrediction001");
+
+  game_movement = (GameMovement*)get_interface("./tf/bin/linux64/client.so", "GameMovement001");
   
   overlay = (DebugOverlay*)get_interface("./bin/linux64/engine.so", "VDebugOverlay003");
   
@@ -91,9 +110,14 @@ void entry() {
   __uint32_t client_mode_eaddr = *(__uint32_t *)((__uint64_t)(hud_process_input_addr) + 0x3);
   void* client_mode_next_instruction = (void *)((__uint64_t)(hud_process_input_addr) + 0x7);
   void* client_mode_interface = *(void **)((__uint64_t)(client_mode_next_instruction) + client_mode_eaddr);
-
-  client_mode_vtable = *(void***)client_mode_interface;
   
+  unsigned long hud_update = (unsigned long)client_vtable[11];
+  unsigned int global_vars_eaddr = *(unsigned int *)(hud_update + 0x16);
+  unsigned long global_vars_next_instruction = (unsigned long)(hud_update + 0x1A);
+  global_vars = (GlobalVars*)(*(void **)(global_vars_next_instruction + global_vars_eaddr));
+
+  // VMT Function Hooks
+  client_mode_vtable = *(void***)client_mode_interface;  
   client_mode_create_move_original = (bool (*)(void*, float, user_cmd*))client_mode_vtable[22];
   if (!write_to_table(client_mode_vtable, 22, (void*)client_mode_create_move_hook)) {
     print("ClientModeShared::CreateMove hook failed\n");
@@ -140,6 +164,9 @@ void entry() {
     print("DrawModelExecute hooked\n");
   }
 
+  // Non-VMT Function hooks
+  funchook = funchook_create();
+  
   in_cond_original = (bool (*)(void*, int))sigscan_module("client.so", "55 83 FE ? 48 89 E5 41 54 41 89 F4");
   
   load_white_list_original = (void* (*)(void*, const char*))sigscan_module("engine.so", "55 48 89 E5 41 55 41 54 49 89 FC 48 83 EC ? 48 8B 07 FF 50");
@@ -180,6 +207,8 @@ void entry() {
   if (rv != 0) {
   }  
 
+  key_values_constructor_original = (KeyValues* (*)(void*, const char*))sigscan_module("client.so", "55 31 C0 66 0F EF C0 48 89 E5 53");
+  
   rv = funchook_install(funchook, 0);
   if (rv != 0) {
     print("Non-VMT related hooks failed\n");
@@ -189,7 +218,8 @@ void entry() {
     print("CL_Move hooked\n");
     //print("vkQueuePresentKHR hooked\n");
   }
-  
+
+  // Bespoke SDL hooking
   void* lib_sdl_handle = dlopen("/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0", RTLD_LAZY | RTLD_NOLOAD);
 
   if (!lib_sdl_handle) {
@@ -210,7 +240,8 @@ void entry() {
   }
 
   dlclose(lib_sdl_handle);
-  
+
+  // TODO: Hook vulkan
   /*
   void* lib_vulkan_handle = dlopen("/run/host/usr/lib/libvulkan.so.1.4.313", RTLD_LAZY | RTLD_NOLOAD);
   
@@ -233,18 +264,21 @@ void entry() {
   */
   
   //dlclose(lib_vulkan_handle);  
+
   
-  void* hud_update = client_vtable[11];
-  __uint32_t global_vars_eaddr = *(__uint32_t *)((__uint64_t)(hud_update) + 0x16);
-  void* global_vars_next_instruction = (void *)((__uint64_t)(hud_update) + 0x1A);
-  //set_global_vars_ptr(*(void **)((__uint64_t)(global_vars_next_instruction) + global_vars_eaddr));
-  
+  // Misc static variables and hookable things
+  unsigned long func_address_2 = (unsigned long)sigscan_module("client.so", "48 8D 05 ? ? ? ? BA ? ? ? ? 89 10"); // credz: vannie / @clsendmove on github
+  unsigned int random_seed_eaddr = *(unsigned int*)(func_address_2 + 0x3);
+  unsigned long func_address_2_next_instruction = (unsigned long)(func_address_2 + 0x7);
+  random_seed = (uint32_t*)((void*)(func_address_2_next_instruction + random_seed_eaddr));
   
   return;
 }
 
 __attribute__((destructor))
 void exit() {
+
+  // Unhook VMT Functions
   if (!write_to_table(client_mode_vtable, 22, (void*)client_mode_create_move_original)) {
     print("ClientMode::CreateMove failed to restore hook\n");
   }
@@ -268,9 +302,11 @@ void exit() {
   if (!write_to_table(model_render_vtable, 19, (void*)draw_model_execute_original)) {
     print("DrawModelExecute failed to restore hook\n");
   }
-  
+
+  // Unhook Non-VMT Functions
   funchook_uninstall(funchook, 0);
 
+  // Unhook SDL
   void *lib_sdl_handle = dlopen("/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0", RTLD_LAZY | RTLD_NOLOAD);
 
   if (!restore_sdl_hook(lib_sdl_handle, "SDL_GL_SwapWindow", (void*)swap_window_original)) {
@@ -283,6 +319,13 @@ void exit() {
 
   dlclose(lib_sdl_handle);
 
+  // Fix thirdperson hack still being enabled when not injected
+  {
+    Player* localplayer = entity_list->get_localplayer();
+    localplayer->set_thirdperson(false);
+  }
+  
+  // Fix cursor visibility when we've removed/unhooked the menu
   if (menu_focused == true)
     surface->set_cursor_visible(!menu_focused);
 }

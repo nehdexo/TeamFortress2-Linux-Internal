@@ -10,6 +10,8 @@
 #include <SDL2/SDL_scancode.h>
 #include <string>
 
+static ImGuiStyle orig_style; // Defined in /hooks/sdl.cpp swap_window_hook
+
 namespace ImGui {
   static void TextCentered(std::string text) {
     auto windowWidth = ImGui::GetWindowSize().x;
@@ -19,6 +21,15 @@ namespace ImGui {
     ImGui::Text(text.c_str());
   }
 
+  static void SliderFloatHeightPad(const char* label, float* v, float v_min, float v_max, float height, const char* format = "%.3f", ImGuiSliderFlags flags = 0) {
+    int orig_x = orig_style.FramePadding.x;
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(orig_x, height));
+    ImGui::SliderFloat(label, v, v_min, v_max, format, flags);
+    ImGui::PopStyleVar(1);
+  }
+
+  
+  
   static std::string GetKeyName(SDL_Scancode key) {
     if (key >= 0) {
       const char* name = SDL_GetKeyName(SDL_GetKeyFromScancode(key));

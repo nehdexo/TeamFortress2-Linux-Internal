@@ -12,20 +12,13 @@ struct CameraThirdData_t {
   Vec3 hull_max;
 };
 
+static user_cmd* (*get_user_cmd_original)(void*, int sequence_number);
+
 class Input {
 public:
 
-  user_cmd* get_commands(void) {
-    return *(user_cmd**)(this + 0x108);
-  }
-
   user_cmd* get_user_cmd(int sequence_number) {
-    user_cmd* commands = this->get_commands();
-    user_cmd* usercmd = &commands[ sequence_number % 90 ];
-
-    if ( usercmd->command_number != sequence_number ) {
-      return nullptr;	// usercmd was overwritten by newer command
-    }
+    user_cmd* usercmd = &this->commands[sequence_number % 90];
 
     return usercmd;
   }
@@ -54,6 +47,10 @@ public:
     to_firstperson_fn(this);
   }
 
+public:
+  char pad0[0x100];
+  
+  user_cmd* commands;
 };
 
 inline static Input* input;
