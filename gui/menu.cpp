@@ -74,6 +74,8 @@ void draw_esp_tab() {
   ImGui::ColorEdit4("Friend Color##Player", config.esp.player.friend_color.to_arr(), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoInputs);
   ImGui::Checkbox("Box##Player", &config.esp.player.box);
   ImGui::Checkbox("Health Bar##Player", &config.esp.player.health_bar);
+  ImGui::SetNextItemWidth(60.0f);
+  ImGui::Combo("Position##Player", &config.esp.player.hb_pos, config.esp.player.hb_pos_items, IM_ARRAYSIZE(config.esp.player.hb_pos_items));
   ImGui::Checkbox("Name##Player", &config.esp.player.name);
   ImGui::NewLine();
   ImGui::Text("Flags");

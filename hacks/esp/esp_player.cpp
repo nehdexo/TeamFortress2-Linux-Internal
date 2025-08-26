@@ -33,9 +33,15 @@ void health_bar_esp_player(Vec3 screen, Vec3 screen_offset, Player* player) {
 
     //shadow
     surface->set_rgba(0, 0, 0, 255);
-    surface->draw_line(screen.x - health_offset - 5, screen.y + 1, screen.x - health_offset - 5, screen_offset.y - 2);
-    surface->draw_line(screen.x - health_offset - 4, screen.y + 1, screen.x - health_offset - 4, screen_offset.y - 2);
-    surface->draw_line(screen.x - health_offset - 3, screen.y + 1, screen.x - health_offset - 3, screen_offset.y - 2);
+    if (config.esp.player.hb_pos == 0) {
+      surface->draw_line(screen.x - health_offset - 5, screen.y + 1, screen.x - health_offset - 5, screen_offset.y - 2);
+      surface->draw_line(screen.x - health_offset - 4, screen.y + 1, screen.x - health_offset - 4, screen_offset.y - 2);
+      surface->draw_line(screen.x - health_offset - 3, screen.y + 1, screen.x - health_offset - 3, screen_offset.y - 2);
+    } else {
+      surface->draw_line(screen.x + health_offset + 5, screen.y + 1, screen.x + health_offset + 5, screen_offset.y - 2);
+      surface->draw_line(screen.x + health_offset + 4, screen.y + 1, screen.x + health_offset + 4, screen_offset.y - 2);
+      surface->draw_line(screen.x + health_offset + 3, screen.y + 1, screen.x + health_offset + 3, screen_offset.y - 2);
+    }
 
     surface->set_rgba(0, 255, 0, 255);
     int ydelta = (screen_offset.y - screen.y) * (1.f - (float(player->get_health()) / player->get_max_health()));
@@ -53,7 +59,11 @@ void health_bar_esp_player(Vec3 screen, Vec3 screen_offset, Player* player) {
     else if (player->get_health() <= (player->get_max_health()*.35))
       surface->set_rgba(255, 0, 0, 255);
   
-    surface->draw_line(screen.x - health_offset - 4, screen.y, screen.x - health_offset - 4, screen_offset.y - ydelta - 1);
+    if (config.esp.player.hb_pos == 0) {
+      surface->draw_line(screen.x - health_offset - 4, screen.y, screen.x - health_offset - 4, screen_offset.y - ydelta - 1);
+    } else {
+      surface->draw_line(screen.x + health_offset + 4, screen.y, screen.x + health_offset + 4, screen_offset.y - ydelta - 1);
+    }
   }
 }
 

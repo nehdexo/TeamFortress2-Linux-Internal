@@ -50,6 +50,9 @@ struct Esp {
     
     bool friends = true;
     bool team = false;
+
+    int hb_pos = 0;
+    const char* hb_pos_items[2] = { "Left", "Right" };
   } player;
 
   struct Pickup {
