@@ -17,9 +17,9 @@ unload() {
              -ex "detach" 2> /dev/null | grep -oP '\$2 = 0x\K[0-9a-f]+')
 
     if [[ "$RC" == "0" ]]; then
-        echo "Library RC unloaded successfully"
+        echo "Library unloaded successfully"
     else
-        echo "Failed to unload library RC"
+        echo "Failed to unload library"
     fi
 }
 
@@ -31,7 +31,7 @@ LIB_HANDLE=$(sudo gdb -n --batch -ex "attach $PROCID" \
 	  )
 
 if [ -z "$LIB_HANDLE" ]; then
-    echo "Failed to load library $LIB_HANDLE"
+    echo "Failed to load library"
     exit 1
 fi
 
