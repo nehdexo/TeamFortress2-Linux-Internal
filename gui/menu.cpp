@@ -82,7 +82,7 @@ void draw_esp_tab() {
   ImGui::Checkbox("Target##Player", &config.esp.player.flags.target_indicator);
   ImGui::Checkbox("Friend##Player", &config.esp.player.flags.friend_indicator);
   ImGui::SetNextItemWidth(60.0f);
-  ImGui::Combo("Position##Player##Flags", &config.esp.player.flags_pos, config.esp.player.flags_pos_items, IM_ARRAYSIZE(config.esp.player.flags_pos_items));
+  ImGui::Combo("Position##Player##Flags", &config.esp.player.flags.pos, config.esp.player.flags.pos_items, IM_ARRAYSIZE(config.esp.player.flags.pos_items));
   ImGui::NewLine();
   ImGui::Text("Misc");
   ImGui::Checkbox("Friends##Player", &config.esp.player.friends);
