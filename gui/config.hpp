@@ -53,6 +53,9 @@ struct Esp {
 
     int hb_pos = 0;
     const char* hb_pos_items[2] = { "Left", "Right" };
+
+    int flags_pos = 0;
+    const char* flags_pos_items[2] = { "Left", "Right" };
   } player;
 
   struct Pickup {
