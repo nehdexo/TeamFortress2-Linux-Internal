@@ -95,7 +95,7 @@ void flags_esp_player(Vec3 screen, Vec3 screen_offset, Player* player, unsigned 
     if (config.esp.player.flags.pos == 1) {
       surface->draw_set_text_pos(screen.x + flags_x_offset + 1 + surface->get_character_width(esp_player_font, L"TARGET"[0]), screen_offset.y + flags_y_offset);
     } else {
-      surface->draw_set_text_pos(screen.x - flags_x_offset - 5 - surface->get_string_width(esp_player_font, L"ATRGET"), screen_offset.y + flags_y_offset);
+      surface->draw_set_text_pos(screen.x - flags_x_offset - 5 - surface->get_string_width(esp_player_font, L"TARGET"), screen_offset.y + flags_y_offset);
     }
 
     surface->draw_print_text(L"TARGET", wcslen(L"TARGET"));
